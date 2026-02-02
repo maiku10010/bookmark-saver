@@ -22,7 +22,55 @@ addBookmarkBtn.addEventListener('click', function() {
     bookmarkTags.value = '';
 });
 
-function renderBookmark(name, url, tags) {
+function renderBookmark(name, url, tags, isEditing = false) {
+     // If editing mode, show edit form directly
+    if (isEditing) {
+        const li = document.createElement('li');
+        li.className = 'editing';
+        li.innerHTML = `
+            <div class="edit-form">
+                <input type="text" value="${name}" class="edit-name" placeholder="Bookmark Name">
+                <input type="text" value="${url}" class="edit-url" placeholder="URL">
+                <input type="text" value="${tags}" class="edit-tags" placeholder="Tags (comma separated)">
+                <div class="edit-buttons">
+                    <button class="save-edit">Save</button>
+                    <button class="cancel-edit">Cancel</button>
+                </div>
+            </div>
+        `;
+        
+        bookmarkList.appendChild(li);
+        
+        // Save button handler
+        li.querySelector('.save-edit').addEventListener('click', function() {
+            const newName = li.querySelector('.edit-name').value.trim();
+            const newURL = li.querySelector('.edit-url').value.trim();
+            const newTags = li.querySelector('.edit-tags').value.trim();
+            
+            if (!newName || !newURL) return alert('Fill in name and URL');
+            if (!newURL.startsWith('http')) return alert('Valid URL required');
+            
+            // Update in localStorage
+            updateBookmark(name, url, newName, newURL, newTags);
+            
+            // Remove edit form and render updated bookmark
+            li.remove();
+            renderBookmark(newName, newURL, newTags);
+        });
+        
+        // Cancel button handler
+        li.querySelector('.cancel-edit').addEventListener('click', function() {
+            li.remove();
+            // Only re-render if we have original values (not for new edits)
+            if (name && url) {
+                renderBookmark(name, url, tags);
+            }
+        });
+        
+        return;
+    }
+    
+    // NORMAL BOOKMARK RENDERING (Your original code with fixes)
     const li = document.createElement('li');
     const a = document.createElement('a');
     a.href = url;
@@ -31,7 +79,7 @@ function renderBookmark(name, url, tags) {
     
     li.appendChild(a);
 
-    // Optional Tags
+    // Optional Tags - FIXED: Added sub-header style
     if (tags) {
         const span = document.createElement('span');
         span.textContent = tags;
@@ -57,16 +105,12 @@ function renderBookmark(name, url, tags) {
     deleteBtn.className = 'deleteBtn';
 
     // Menu Button Functionality
-    
-    // Toggle only this menu and close others
     menuBtn.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevents document click from closing it immediately
+        e.stopPropagation();
         const isActive = menuBtn.classList.contains('active');
         
-        // Close all other menus first
         document.querySelectorAll('.menuBtn').forEach(m => m.classList.remove('active'));
         
-        // Open this one if it wasn't already
         if (!isActive) menuBtn.classList.add('active');
     });
 
@@ -78,10 +122,12 @@ function renderBookmark(name, url, tags) {
 
     editBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        // Placeholder for edit
         menuBtn.classList.remove('active');
+        
+        // Replace entire bookmark with edit form
+        li.remove();
+        renderBookmark(name, url, tags, true); // true = editing mode
     });
-
 
     menuContent.appendChild(editBtn);
     menuContent.appendChild(deleteBtn);
@@ -95,6 +141,14 @@ document.addEventListener('click', () => {
     document.querySelectorAll('.menuBtn').forEach(m => m.classList.remove('active'));
 });
 
+function updateBookmark(oldName, oldURL, newName, newURL, newTags) {
+    let bookmarks = getBookmarksFromStorage();
+    const index = bookmarks.findIndex(b => b.name === oldName && b.url === oldURL);
+    if (index !== -1) {
+        bookmarks[index] = { name: newName, url: newURL, tags: newTags };
+        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    }
+}
 
 function saveBookmark(name, url, tags) {
     const bookmarks = getBookmarksFromStorage();

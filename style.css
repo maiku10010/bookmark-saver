@@ -78,9 +78,21 @@ button:hover{
     font-weight: 500;
     word-break: break-all;
 }
+
 #bookmark-list li a:hover{
     text-decoration: underline;
 }
+
+.tag-badge {
+    background-color: rgba(255, 105, 180, 0.1); /* Light hotpink */
+    color: hotpink;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    border: 1px solid rgba(255, 105, 180, 0.3);
+    display: inline-block;
+}
+
 .menuBtn {
     position: relative;
     cursor: pointer;
