@@ -1,53 +1,70 @@
-const bookmarkName = document.getElementById('bookmark-id');
-const bookmarkTags = document.getElementById('bookmark-tags');
-const bookmarkURL = document.getElementById('bookmark-url');
-const addBookmarkBtn = document.getElementById('add-bookmark');
-const bookmarkList = document.getElementById('bookmark-list');
-const searchBar = document.getElementById('search-bar'); //added search bar
-const sortContainer = document.querySelector('.sort-container'); // Sort container
-let currentSort = 'date-newest'; // Default sort
+// ============================================================================
+// DOM ELEMENT REFERENCES - Getting HTML elements by their IDs
+// ============================================================================
+const bookmarkName = document.getElementById('bookmark-id');      // Name input field
+const bookmarkTags = document.getElementById('bookmark-tags');    // Tags input field
+const bookmarkURL = document.getElementById('bookmark-url');      // URL input field
+const addBookmarkBtn = document.getElementById('add-bookmark');   // "Add Bookmark" button
+const bookmarkList = document.getElementById('bookmark-list');    // UL container that holds all bookmarks
+const searchBar = document.getElementById('search-bar');          // Search input field
+const sortContainer = document.querySelector('.sort-container');  // Container for sort buttons
+let currentSort = 'date-newest';                                  // Track current sort method
 
+// ============================================================================
+// INITIALIZATION - Runs when page loads
+// ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
-    loadBookmarks();
-    setupSortButtons();
+    loadBookmarks();       // Load saved bookmarks from localStorage
+    setupSortButtons();    // Setup click handlers for sort buttons
 });
 
+// ============================================================================
+// ADD BOOKMARK FUNCTIONALITY
+// ============================================================================
 addBookmarkBtn.addEventListener('click', function() {
+    // Get and clean input values
     const name = bookmarkName.value.trim();
     const url = bookmarkURL.value.trim();
     const tags = bookmarkTags.value.trim();
 
-    if (!name || !url) return alert('Fill in name and URL');
-    if (!url.startsWith('http')) return alert('Valid URL required');
+    // Validation checks
+    if (!name || !url) return alert('Fill in name and URL');     // Require name and URL
+    if (!url.startsWith('http')) return alert('Valid URL required'); // URL must start with http/https
 
-    renderBookmark(name, url, tags);
-    saveBookmark(name, url, tags);
+    // Add to page and save to storage
+    renderBookmark(name, url, tags);  // Display on page
+    saveBookmark(name, url, tags);    // Save to localStorage
 
+    // Clear input fields after adding
     bookmarkName.value = '';
     bookmarkURL.value = '';
     bookmarkTags.value = '';
 });
 
+// ============================================================================
+// SORTING FUNCTIONALITY
+// ============================================================================
 function setupSortButtons() {
-    if (!sortContainer) return;
+    if (!sortContainer) return; // Exit if no sort container found
     
+    // Add click event listener to sort container (event delegation)
     sortContainer.addEventListener('click', function(e) {
         if (e.target.classList.contains('sort-btn')) {
-            const sortType = e.target.dataset.sort;
+            const sortType = e.target.dataset.sort; // Get sort type from button's data attribute
             
-            // Update active button
+            // Update active button visual state
             document.querySelectorAll('.sort-btn').forEach(btn => {
-                btn.classList.remove('active');
+                btn.classList.remove('active'); // Remove active class from all buttons
             });
-            e.target.classList.add('active');
+            e.target.classList.add('active'); // Add active class to clicked button
             
-            // Apply sorting
+            // Apply the selected sorting
             sortBookmarks(sortType);
-            currentSort = sortType;
+            currentSort = sortType; // Remember current sort method
         }
     });
     
-    // Set default active button
+    // Set default active button (newest first)
     const defaultBtn = document.querySelector('[data-sort="date-newest"]');
     if (defaultBtn) defaultBtn.classList.add('active');
 }
@@ -56,49 +73,54 @@ function sortBookmarks(sortType) {
     // Get current bookmarks from localStorage
     let bookmarks = getBookmarksFromStorage();
     
-    if (bookmarks.length === 0) return;
+    if (bookmarks.length === 0) return; // Exit if no bookmarks
     
-    // Apply sorting based on type
+    // Apply different sorting algorithms based on selected type
     switch(sortType) {
-        case 'name-asc':
+        case 'name-asc': // Sort by name A-Z
             bookmarks.sort((a, b) => a.name.localeCompare(b.name));
             break;
             
-        case 'name-desc':
+        case 'name-desc': // Sort by name Z-A
             bookmarks.sort((a, b) => b.name.localeCompare(a.name));
             break;
             
-        case 'date-newest':
-            // Since we don't store timestamps, we'll use array order
-            // For now, assume last added is newest
-            break; // Already newest first in our array
-            
-        case 'date-oldest':
-            bookmarks.reverse();
+        case 'date-newest': // Newest first (default - already in this order)
+            // Note: Currently uses array order since we don't store timestamps
             break;
             
-        case 'tags':
+        case 'date-oldest': // Oldest first
+            bookmarks.reverse(); // Reverse the array
+            break;
+            
+        case 'tags': // Sort by tags alphabetically
             bookmarks.sort((a, b) => {
-                const tagsA = a.tags || '';
+                const tagsA = a.tags || ''; // Handle empty tags
                 const tagsB = b.tags || '';
-                return tagsA.localeCompare(tagsB);
+                return tagsA.localeCompare(tagsB); // Compare tag strings
             });
             break;
     }
     
-    // Save sorted bookmarks
+    // Save sorted bookmarks back to localStorage
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
     
-    // Clear and re-render
-    bookmarkList.innerHTML = '';
-    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags));
+    // Clear the display and re-render with sorted order
+    bookmarkList.innerHTML = ''; // Remove all bookmarks from display
+    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags)); // Re-add in sorted order
 }
 
+// ============================================================================
+// BOOKMARK RENDERING - Creates HTML elements for bookmarks
+// ============================================================================
 function renderBookmark(name, url, tags, isEditing = false) {
-     // If editing mode, show edit form directly
+    // ========== EDITING MODE ==========
+    // If isEditing is true, show edit form instead of bookmark
     if (isEditing) {
         const li = document.createElement('li');
         li.className = 'editing';
+        
+        // Create edit form HTML structure
         li.innerHTML = `
             <div class="edit-form">
                 <input type="text" value="${name}" class="edit-name" placeholder="Bookmark Name">
@@ -111,7 +133,7 @@ function renderBookmark(name, url, tags, isEditing = false) {
             </div>
         `;
         
-        bookmarkList.appendChild(li);
+        bookmarkList.appendChild(li); // Add edit form to page
         
         // Save button handler
         li.querySelector('.save-edit').addEventListener('click', function() {
@@ -119,6 +141,7 @@ function renderBookmark(name, url, tags, isEditing = false) {
             const newURL = li.querySelector('.edit-url').value.trim();
             const newTags = li.querySelector('.edit-tags').value.trim();
             
+            // Validate inputs
             if (!newName || !newURL) return alert('Fill in name and URL');
             if (!newURL.startsWith('http')) return alert('Valid URL required');
             
@@ -126,223 +149,284 @@ function renderBookmark(name, url, tags, isEditing = false) {
             updateBookmark(name, url, newName, newURL, newTags);
             
             // Remove edit form and render updated bookmark
-            li.remove();
-            renderBookmark(newName, newURL, newTags);
+            li.remove(); // Remove edit form
+            renderBookmark(newName, newURL, newTags); // Show updated bookmark
         });
         
         // Cancel button handler
         li.querySelector('.cancel-edit').addEventListener('click', function() {
-            li.remove();
-            // Only re-render if we have original values (not for new edits)
+            li.remove(); // Remove edit form
+            
+            // Only re-render original if we have values (not for cancelled new adds)
             if (name && url) {
-                renderBookmark(name, url, tags);
+                renderBookmark(name, url, tags); // Show original bookmark again
             }
         });
         
-        return;
+        return; // Exit function - we're done with edit mode
     }
     
-    // NORMAL BOOKMARK RENDERING (Your original code with fixes)
+    // ========== NORMAL BOOKMARK RENDERING ==========
+    // Create list item container for the bookmark
     const li = document.createElement('li');
-    li.draggable = true;
-    li.setAttribute('data-id', Date.now());
-    const a = document.createElement('a');
-    a.href = url;
-    a.textContent = name;
-    a.target = '_blank';
+    li.draggable = true; // Enable drag and drop
+    li.setAttribute('data-id', Date.now()); // Give unique ID
     
-    li.appendChild(a);
+    // Create clickable link
+    const a = document.createElement('a');
+    a.href = url; // Link URL
+    a.textContent = name; // Link text (bookmark name)
+    a.target = '_blank'; // Open in new tab
+    
+    li.appendChild(a); // Add link to list item
 
-    // Optional Tags - FIXED: Added sub-header style
+    // ========== TAGS SECTION ==========
+    // Create tag display if tags exist
     if (tags) {
         const span = document.createElement('span');
-        span.textContent = tags;
-        span.className = 'tag-badge'; 
-        li.appendChild(span);
+        span.textContent = tags; // Tag text
+        span.className = 'tag-badge'; // CSS class for styling
+        li.appendChild(span); // Add tag to list item
     }
 
-    // Menu Button ☰
+    // ========== MENU BUTTON (☰) ==========
+    // Create the menu button
     const menuBtn = document.createElement('div');
     menuBtn.className = 'menuBtn';
-    menuBtn.textContent = '☰';
+    menuBtn.textContent = '☰'; // Hamburger menu icon
 
-    // Menu Box
+    // Create menu content container
     const menuContent = document.createElement('div');
     menuContent.className = 'menu-content';
 
+    // Create Edit button
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
     editBtn.className = 'editBtn';
 
+    // Create Delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
     deleteBtn.className = 'deleteBtn';
 
-    // Menu Button Functionality
+    // ========== MENU FUNCTIONALITY ==========
+    // Menu button click - show/hide menu
     menuBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const isActive = menuBtn.classList.contains('active');
+        e.stopPropagation(); // Prevent event from bubbling up
         
-        document.querySelectorAll('.menuBtn').forEach(m => m.classList.remove('active'));
+        const isActive = menuBtn.classList.contains('active'); // Check if already open
         
+        // Close all other open menus first
+        document.querySelectorAll('.menuBtn').forEach(m => {
+            m.classList.remove('active');
+        });
+        
+        // Open this menu if it wasn't already open
         if (!isActive) menuBtn.classList.add('active');
     });
 
+    // Delete button functionality
     deleteBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        li.remove();
-        deleteBookmark(name, url);
+        e.stopPropagation(); // Prevent menu from closing immediately
+        li.remove(); // Remove from DOM
+        deleteBookmark(name, url); // Remove from localStorage
     });
 
+    // Edit button functionality
     editBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        menuBtn.classList.remove('active');
+        e.stopPropagation(); // Prevent menu from closing immediately
+        menuBtn.classList.remove('active'); // Close menu
         
-        // Replace entire bookmark with edit form
-        li.remove();
-        renderBookmark(name, url, tags, true); // true = editing mode
+        // Replace bookmark with edit form
+        li.remove(); // Remove current bookmark display
+        renderBookmark(name, url, tags, true); // Re-render in edit mode
     });
 
+    // ========== ASSEMBLE BOOKMARK ==========
+    // Set up drag and drop events
     setupDragEvents(li);
 
+    // Add buttons to menu, menu to button, button to bookmark
     menuContent.appendChild(editBtn);
     menuContent.appendChild(deleteBtn);
     menuBtn.appendChild(menuContent);
     li.appendChild(menuBtn);
+    
+    // Add completed bookmark to the page
     bookmarkList.appendChild(li);
 }
 
-// Close menus when clicking background
+// ============================================================================
+// MENU MANAGEMENT
+// ============================================================================
+// Close all menus when clicking anywhere on the page
 document.addEventListener('click', () => {
-    document.querySelectorAll('.menuBtn').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.menuBtn').forEach(m => {
+        m.classList.remove('active'); // Close all open menus
+    });
 });
 
-//FOR DRAG AND DROP
-let draggedItem = null;
+// ============================================================================
+// DRAG AND DROP FUNCTIONALITY
+// ============================================================================
+let draggedItem = null; // Track which item is being dragged
 
 function setupDragEvents(item) {
-
-    //When dragging starts
+    // ========== DRAG START ==========
+    // When user starts dragging an item
     item.addEventListener('dragstart', function(e) {
-        draggedItem = this;
+        draggedItem = this; // Remember which item is being dragged
+        
+        // Make item semi-transparent (setTimeout ensures it shows)
         setTimeout(() => {
             this.style.opacity = '0.4';
         }, 0);
      });
 
-     //When dragging over another item
+     // ========== DRAG OVER ==========
+     // When dragged item is over another item
      item.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.style.backgroundColor = 'rgba(255, 105, 180, 0.1)';
+        e.preventDefault(); // Required to allow drop
+        this.style.backgroundColor = 'rgba(255, 105, 180, 0.1)'; // Highlight drop target
      });
 
-     //When leaving another item
+     // ========== DRAG LEAVE ==========
+     // When dragged item leaves another item
      item.addEventListener('dragleave', function(e) {
-        this.style.backgroundColor = '';
+        this.style.backgroundColor = ''; // Remove highlight
      });
 
-     //When dropping on another item
+     // ========== DROP ==========
+     // When item is dropped on another item
      item.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.style.backgroundColor = '';
+        e.preventDefault(); // Required for drop to work
+        this.style.backgroundColor = ''; // Remove highlight
 
+        // Only proceed if dropping on a different item
         if (draggedItem !== this) {
-            // Get all bookmarks
+            // Get all bookmarks as an array
             const items = [...bookmarkList.children];
-            const draggedIndex = items.indexOf(draggedItem);
-            const targetIndex = items.indexOf(this);
+            const draggedIndex = items.indexOf(draggedItem); // Position of dragged item
+            const targetIndex = items.indexOf(this); // Position of drop target
 
-            //Swap positions
+            // ========== POSITION CALCULATION ==========
+            // Determine where to insert based on direction of drag
             if (draggedIndex < targetIndex) {
+                // Dragging DOWN: Insert AFTER target
                 bookmarkList.insertBefore(draggedItem, this.nextSibling);
             } else {
+                // Dragging UP: Insert BEFORE target
                 bookmarkList.insertBefore(draggedItem, this);
             }
 
-            //Save new order to localStorage
+            // Save the new order to localStorage
             saveBookmarkOrder();
         }
      });
 
-      // When drag ends
+     // ========== DRAG END ==========
+     // When dragging finishes
     item.addEventListener('dragend', function() {
-        this.style.opacity = '1';
-        this.style.backgroundColor = '';
-        draggedItem = null;
+        this.style.opacity = '1'; // Make opaque again
+        this.style.backgroundColor = ''; // Clear any highlight
+        draggedItem = null; // Reset dragged item
         
-        // Remove hover effects from all items
+        // Clear highlights from all items
         document.querySelectorAll('#bookmark-list li').forEach(li => {
             li.style.backgroundColor = '';
         });
     });
 }
 
+// ============================================================================
+// SAVE DRAG & DROP ORDER
+// ============================================================================
 function saveBookmarkOrder() {
+    // Get current DOM order of bookmarks
     const items = [...bookmarkList.children];
-    const bookmarks = getBookmarksFromStorage();
+    const bookmarks = getBookmarksFromStorage(); // Get data from localStorage
 
+    // Create new array in current DOM order
     const orderedBookmarks = items.map(item => {
-        const link = item.querySelector('a');
-        const tagSpan = item.querySelector('.tag-badge');   
+        const link = item.querySelector('a'); // Get link element
+        const tagSpan = item.querySelector('.tag-badge'); // Get tag element
 
         return {
-            name: link.textContent,
-            url: link.href,
-            tags: tagSpan ? tagSpan.textContent : ''
+            name: link.textContent, // Bookmark name
+            url: link.href, // Bookmark URL
+            tags: tagSpan ? tagSpan.textContent : '' // Tags or empty string
         };
     });
 
+    // Save reordered bookmarks to localStorage
     localStorage.setItem('bookmarks', JSON.stringify(orderedBookmarks));
 }
 
+// ============================================================================
+// LOCALSTORAGE FUNCTIONS - CRUD Operations
+// ============================================================================
+
+// UPDATE - Modify existing bookmark
 function updateBookmark(oldName, oldURL, newName, newURL, newTags) {
     let bookmarks = getBookmarksFromStorage();
+    // Find index of bookmark to update
     const index = bookmarks.findIndex(b => b.name === oldName && b.url === oldURL);
-    if (index !== -1) {
-        bookmarks[index] = { name: newName, url: newURL, tags: newTags };
-        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    
+    if (index !== -1) { // If found
+        bookmarks[index] = { name: newName, url: newURL, tags: newTags }; // Update
+        localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); // Save
     }
 }
 
+// CREATE - Save new bookmark
 function saveBookmark(name, url, tags) {
-    const bookmarks = getBookmarksFromStorage();
-    bookmarks.push({ name, url, tags });
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    const bookmarks = getBookmarksFromStorage(); // Get existing bookmarks
+    bookmarks.push({ name, url, tags }); // Add new bookmark
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); // Save
 }
 
+// READ - Load all bookmarks on page load
 function loadBookmarks() {
-    const bookmarks = getBookmarksFromStorage();
-    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags));
+    const bookmarks = getBookmarksFromStorage(); // Get from localStorage
+    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags)); // Render each
 }
 
+// READ - Helper to get bookmarks from localStorage
 function getBookmarksFromStorage() {
-    const data = localStorage.getItem('bookmarks');
-    return data ? JSON.parse(data) : [];
+    const data = localStorage.getItem('bookmarks'); // Get raw string
+    return data ? JSON.parse(data) : []; // Parse to array or return empty array
 }
 
+// DELETE - Remove bookmark
 function deleteBookmark(name, url) {
     let bookmarks = getBookmarksFromStorage();
+    // Filter out the bookmark to delete
     bookmarks = bookmarks.filter(b => b.name !== name || b.url !== url);
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); // Save updated list
 }
 
+// ============================================================================
+// SEARCH FUNCTIONALITY
+// ============================================================================
 if (searchBar) {
     searchBar.addEventListener('keyup', function(e) {
-        const term = e.target.value.toLowerCase();
-        const bookmarks = bookmarkList.getElementsByTagName('li');
+        const term = e.target.value.toLowerCase(); // Get search term in lowercase
+        const bookmarks = bookmarkList.getElementsByTagName('li'); // Get all bookmarks
 
+        // Check each bookmark against search term
         Array.from(bookmarks).forEach(function(bookmark) {
-            // Get text from the link (name) and the tag span
+            // Get text from name and tags
             const name = bookmark.querySelector('a') ? bookmark.querySelector('a').textContent : '';
             const tags = bookmark.querySelector('.tag-badge') ? bookmark.querySelector('.tag-badge').textContent : '';
             
+            // Combine name and tags for searching
             const combinedText = (name + tags).toLowerCase();
 
-            // Toggle visibility based on the search term
+            // Show/hide based on search match
             if (combinedText.indexOf(term) !== -1) {
-                bookmark.style.display = 'flex';
+                bookmark.style.display = 'flex'; // Show if matches
             } else {
-                bookmark.style.display = 'none';
+                bookmark.style.display = 'none'; // Hide if no match
             }
         });
     });

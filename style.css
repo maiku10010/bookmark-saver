@@ -6,27 +6,86 @@
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
 }
-body{
-    background-color: hotpink;
+
+body {
+    background-color: hotpink; /* Fallback color if gradients aren't supported */
     color: white;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-     margin: 0;
+    margin: 0;
     padding: 0;
-    min-height: 100vh;
+    min-height: 100vh; /* Ensures full viewport height */
+    
+    /* ===== BACKGROUND GRADIENT ANIMATION ===== */
+    /* Create a gradient with 4 pink shades at 45 degree angle */
     background: linear-gradient(-45deg, 
-        #ff69b4,  /* Hot pink */
-        #df63a5,  /* Purple */
-        #ffb6c1,  /* Dodger blue */
-        #db7093    /* Spring green */
+        #ff69b4,  
+        #df63a5,  
+        #ffb6c1,  
+        #db7093   
     );
-    background-size: 400% 400%;
+    
+    background-size: 400% 400%; 
+    
+    /* ===== APPLY THE ANIMATION ===== */
+    /* Name | Duration | Timing function | Iteration count */
     animation: gradient-flow 8s ease infinite;
+    /* 8 seconds per cycle | Smooth easing | Repeats forever */
 }
 
+/* ===== KEYFRAMES: Defines the animation steps ===== */
 @keyframes gradient-flow {
+    /* START: Position gradient at top-left quadrant */
+    0% {
+        background-position: 0% 50%; 
+        /* X: 0% (left edge), Y: 50% (center vertically) */
+    }
+    
+    /* MIDDLE: Slide gradient to bottom-right quadrant */
+    50% {
+        background-position: 100% 50%;
+        /* X: 100% (right edge), Y: 50% (center vertically) */
+        /* This slides the gradient to the right */
+    }
+    
+    /* END: Return to starting position */
+    100% {
+        background-position: 0% 50%;
+        /* Completes the cycle back to start */
+    }
+    /* Visual: [Colors] → slide right → [Colors] → slide back */
+}
+
+.container {
+    /* ===== CONTAINER GRADIENT ===== */
+    background: linear-gradient(-45deg, 
+        #ffb6c1,  
+        #ff69b4,  
+        #f0a4cb,  
+        #ffb6c1   
+    );
+    background-size: 400% 400%; 
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    
+    /* ===== FASTER ANIMATION ===== */
+    animation: gradient-shift 4s ease infinite;
+}
+
+/* ===== HOVER EFFECT ===== */
+.container:hover {
+    transform: scale(1.1); /* Grow 10% larger on hover */
+    transition: transform 0.3s ease; /* Smooth scaling over 0.3 seconds */
+}
+
+/* ===== CONTAINER'S ANIMATION ===== */
+@keyframes gradient-shift {
     0% {
         background-position: 0% 50%;
     }
@@ -36,22 +95,7 @@ body{
     100% {
         background-position: 0% 50%;
     }
-}
-
-.container{
-    background-color: lightpink;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 90%;
-    max-width: 400px;
-    transition: transform 0.3s ease;
-}
-
-.container:hover {
-    transform: scale(1.1);
-    transition: transform 0.3s ease;
+    /* Same pattern as body, but different speed = visual interest! */
 }
 
 /*Sort Container */
