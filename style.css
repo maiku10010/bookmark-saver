@@ -13,6 +13,29 @@ body{
     justify-content: center;
     align-items: center;
     height: 100vh;
+     margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(-45deg, 
+        #ff69b4,  /* Hot pink */
+        #df63a5,  /* Purple */
+        #ffb6c1,  /* Dodger blue */
+        #db7093    /* Spring green */
+    );
+    background-size: 400% 400%;
+    animation: gradient-flow 8s ease infinite;
+}
+
+@keyframes gradient-flow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .container{
@@ -23,7 +46,23 @@ body{
     text-align: center;
     width: 90%;
     max-width: 400px;
+    transition: transform 0.3s ease;
 }
+
+.container:hover {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+}
+
+/*Sort Container */
+.sort-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
 h1{
     margin-bottom: 20px;
     color: hotpink;
@@ -50,17 +89,41 @@ button{
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
+    transition: transform 0.3s ease;
 }
 button:hover{
     background-color: white;
     color: hotpink;
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
 }
 
-/* Bookmark List Styles */
+/* HEADER TITLE */
+#header-title {
+    color: #fff;
+    text-shadow: 
+        0 0 5px hotpink,
+        0 0 10px hotpink,
+        0 0 15px hotpink,
+        0 0 20px hotpink;
+}
+
+/* Pulsing Glow Animation */
+@keyframes glow-pulse {
+    0%, 100% { text-shadow: 0 0 5px hotpink; }
+    50% { text-shadow: 0 0 20px hotpink, 0 0 30px #ff69b4; }
+}
+
+.pulse-glow {
+    animation: glow-pulse 2s infinite;
+}
+
+/* Bookmark List Styles and Animations*/
 #bookmark-list{
     list-style: none;
     padding: 0;
 }
+
 #bookmark-list li{
     user-select: none;
     background-color: white;
@@ -72,6 +135,12 @@ button:hover{
     align-items: center;
     gap: 10px;
     cursor: grab;
+    transition: transform 0.3s ease;
+}
+
+#bookmark-list li:hover {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
 }
 
 #bookmark-list li:active {
@@ -124,6 +193,12 @@ button:hover{
     margin-bottom: 10px;
     border-top: 1px solid hotpink;
     padding-top: 20px;
+    transition: transform 0.3s ease;
+}
+
+.search-container:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
 }
 
 #search-bar {
@@ -131,6 +206,19 @@ button:hover{
     border: 3px solid hotpink;
     background-color: #fff0f5; 
 }
+
+/* TEXT FIELDS */
+.input-container input {
+    transition: transform 0.3 ease;
+}
+
+.input-container input:hover {
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+/* BUTTON */
+
 
 .menuBtn {
     position: relative;

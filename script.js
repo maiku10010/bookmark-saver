@@ -4,8 +4,13 @@ const bookmarkURL = document.getElementById('bookmark-url');
 const addBookmarkBtn = document.getElementById('add-bookmark');
 const bookmarkList = document.getElementById('bookmark-list');
 const searchBar = document.getElementById('search-bar'); //added search bar
+const sortContainer = document.querySelector('.sort-container'); // Sort container
+let currentSort = 'date-newest'; // Default sort
 
-document.addEventListener('DOMContentLoaded', loadBookmarks);
+document.addEventListener('DOMContentLoaded', function() {
+    loadBookmarks();
+    setupSortButtons();
+});
 
 addBookmarkBtn.addEventListener('click', function() {
     const name = bookmarkName.value.trim();
@@ -22,6 +27,72 @@ addBookmarkBtn.addEventListener('click', function() {
     bookmarkURL.value = '';
     bookmarkTags.value = '';
 });
+
+function setupSortButtons() {
+    if (!sortContainer) return;
+    
+    sortContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('sort-btn')) {
+            const sortType = e.target.dataset.sort;
+            
+            // Update active button
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            
+            // Apply sorting
+            sortBookmarks(sortType);
+            currentSort = sortType;
+        }
+    });
+    
+    // Set default active button
+    const defaultBtn = document.querySelector('[data-sort="date-newest"]');
+    if (defaultBtn) defaultBtn.classList.add('active');
+}
+
+function sortBookmarks(sortType) {
+    // Get current bookmarks from localStorage
+    let bookmarks = getBookmarksFromStorage();
+    
+    if (bookmarks.length === 0) return;
+    
+    // Apply sorting based on type
+    switch(sortType) {
+        case 'name-asc':
+            bookmarks.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+            
+        case 'name-desc':
+            bookmarks.sort((a, b) => b.name.localeCompare(a.name));
+            break;
+            
+        case 'date-newest':
+            // Since we don't store timestamps, we'll use array order
+            // For now, assume last added is newest
+            break; // Already newest first in our array
+            
+        case 'date-oldest':
+            bookmarks.reverse();
+            break;
+            
+        case 'tags':
+            bookmarks.sort((a, b) => {
+                const tagsA = a.tags || '';
+                const tagsB = b.tags || '';
+                return tagsA.localeCompare(tagsB);
+            });
+            break;
+    }
+    
+    // Save sorted bookmarks
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    
+    // Clear and re-render
+    bookmarkList.innerHTML = '';
+    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags));
+}
 
 function renderBookmark(name, url, tags, isEditing = false) {
      // If editing mode, show edit form directly
