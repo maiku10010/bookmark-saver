@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:100,100italic,200,200italic,300,300italic,regular,italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic');
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+body{
+    background-color: hotpink;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container{
+    background-color: lightpink;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+}
+h1{
+    margin-bottom: 20px;
+    color: hotpink;
+    letter-spacing: 1px;
+}
+
+.input-container{
+    display: flex;
+    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 5px;
+}
+input{
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid hotpink;
+    outline: none;
+}
+button{
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: hotpink;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+button:hover{
+    background-color: white;
+    color: hotpink;
+}
+#bookmark-list{
+    list-style: none;
+    padding: 0;
+}
+#bookmark-list li{
+    background-color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+#bookmark-list li a{
+    color: hotpink;
+    text-decoration: none;
+    flex-grow: 1;
+    text-align: left;
+    font-weight: 500;
+    word-break: break-all;
+}
+#bookmark-list li a:hover{
+    text-decoration: underline;
+}
+.menuBtn {
+    position: relative;
+    cursor: pointer;
+    color: hotpink;
+    font-weight: bold;
+    padding: 5px;
+}
+
+.menuBtn .deleteBtn,
+.menuBtn .editBtn {
+    display:none;
+    position: absolute;
+    right: 0;
+    width: 100px;
+    height: 30px;
+    padding-top: 5px;
+    background-color: lightpink;
+    border: 1px solid hotpink;
+    font-size: 14px;
+    z-index: 10;
+}
+
+.menuBtn .deleteBtn:hover, .menuBtn .editBtn:hover {
+    background-color: hotpink;
+    color: white;
+}
+.menuBtn .deleteBtn {
+    top: 25px;
+}
+.menuBtn .editBtn {
+    top: 55px;
+}
+
+.menuBtn.active .deleteBtn, .menuBtn.active .editBtn {
+    display: block;
+}
