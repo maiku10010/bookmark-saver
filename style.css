@@ -55,11 +55,14 @@ button:hover{
     background-color: white;
     color: hotpink;
 }
+
+/* Bookmark List Styles */
 #bookmark-list{
     list-style: none;
     padding: 0;
 }
 #bookmark-list li{
+    user-select: none;
     background-color: white;
     padding: 10px;
     border-radius: 4px;
@@ -68,6 +71,28 @@ button:hover{
     justify-content: space-between;
     align-items: center;
     gap: 10px;
+    cursor: grab;
+}
+
+#bookmark-list li:active {
+    cursor: grabbing;
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Visual feedback during drag */
+#bookmark-list li.dragging {
+    /* Remove opacity, use background color instead */
+    opacity: 10;
+    background-color: rgba(255, 105, 180, 0.1);
+    border: 2px dashed hotpink;
+    transform: rotate(2deg);
+}
+
+/* Drop zone highlight */
+#bookmark-list li.drop-zone {
+    border-top: 3px solid hotpink;
+    margin-top: 5px;
 }
 
 #bookmark-list li a{

@@ -72,6 +72,8 @@ function renderBookmark(name, url, tags, isEditing = false) {
     
     // NORMAL BOOKMARK RENDERING (Your original code with fixes)
     const li = document.createElement('li');
+    li.draggable = true;
+    li.setAttribute('data-id', Date.now());
     const a = document.createElement('a');
     a.href = url;
     a.textContent = name;
@@ -129,6 +131,8 @@ function renderBookmark(name, url, tags, isEditing = false) {
         renderBookmark(name, url, tags, true); // true = editing mode
     });
 
+    setupDragEvents(li);
+
     menuContent.appendChild(editBtn);
     menuContent.appendChild(deleteBtn);
     menuBtn.appendChild(menuContent);
@@ -140,6 +144,84 @@ function renderBookmark(name, url, tags, isEditing = false) {
 document.addEventListener('click', () => {
     document.querySelectorAll('.menuBtn').forEach(m => m.classList.remove('active'));
 });
+
+//FOR DRAG AND DROP
+let draggedItem = null;
+
+function setupDragEvents(item) {
+
+    //When dragging starts
+    item.addEventListener('dragstart', function(e) {
+        draggedItem = this;
+        setTimeout(() => {
+            this.style.opacity = '0.4';
+        }, 0);
+     });
+
+     //When dragging over another item
+     item.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = 'rgba(255, 105, 180, 0.1)';
+     });
+
+     //When leaving another item
+     item.addEventListener('dragleave', function(e) {
+        this.style.backgroundColor = '';
+     });
+
+     //When dropping on another item
+     item.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '';
+
+        if (draggedItem !== this) {
+            // Get all bookmarks
+            const items = [...bookmarkList.children];
+            const draggedIndex = items.indexOf(draggedItem);
+            const targetIndex = items.indexOf(this);
+
+            //Swap positions
+            if (draggedIndex < targetIndex) {
+                bookmarkList.insertBefore(draggedItem, this.nextSibling);
+            } else {
+                bookmarkList.insertBefore(draggedItem, this);
+            }
+
+            //Save new order to localStorage
+            saveBookmarkOrder();
+        }
+     });
+
+      // When drag ends
+    item.addEventListener('dragend', function() {
+        this.style.opacity = '1';
+        this.style.backgroundColor = '';
+        draggedItem = null;
+        
+        // Remove hover effects from all items
+        document.querySelectorAll('#bookmark-list li').forEach(li => {
+            li.style.backgroundColor = '';
+        });
+    });
+}
+
+function saveBookmarkOrder() {
+    const items = [...bookmarkList.children];
+    const bookmarks = getBookmarksFromStorage();
+
+    const orderedBookmarks = items.map(item => {
+        const link = item.querySelector('a');
+        const tagSpan = item.querySelector('.tag-badge');   
+
+        return {
+            name: link.textContent,
+            url: link.href,
+            tags: tagSpan ? tagSpan.textContent : ''
+        };
+    });
+
+    localStorage.setItem('bookmarks', JSON.stringify(orderedBookmarks));
+}
 
 function updateBookmark(oldName, oldURL, newName, newURL, newTags) {
     let bookmarks = getBookmarksFromStorage();
