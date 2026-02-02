@@ -3,6 +3,7 @@ const bookmarkTags = document.getElementById('bookmark-tags');
 const bookmarkURL = document.getElementById('bookmark-url');
 const addBookmarkBtn = document.getElementById('add-bookmark');
 const bookmarkList = document.getElementById('bookmark-list');
+const searchBar = document.getElementById('search-bar'); //added search bar
 
 document.addEventListener('DOMContentLoaded', loadBookmarks);
 
@@ -252,4 +253,26 @@ function deleteBookmark(name, url) {
     let bookmarks = getBookmarksFromStorage();
     bookmarks = bookmarks.filter(b => b.name !== name || b.url !== url);
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+}
+
+if (searchBar) {
+    searchBar.addEventListener('keyup', function(e) {
+        const term = e.target.value.toLowerCase();
+        const bookmarks = bookmarkList.getElementsByTagName('li');
+
+        Array.from(bookmarks).forEach(function(bookmark) {
+            // Get text from the link (name) and the tag span
+            const name = bookmark.querySelector('a') ? bookmark.querySelector('a').textContent : '';
+            const tags = bookmark.querySelector('.tag-badge') ? bookmark.querySelector('.tag-badge').textContent : '';
+            
+            const combinedText = (name + tags).toLowerCase();
+
+            // Toggle visibility based on the search term
+            if (combinedText.indexOf(term) !== -1) {
+                bookmark.style.display = 'flex';
+            } else {
+                bookmark.style.display = 'none';
+            }
+        });
+    });
 }

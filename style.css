@@ -118,6 +118,20 @@ button:hover{
     display: inline-block;
 }
 
+/* Search Bar */
+.search-container {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-top: 1px solid hotpink;
+    padding-top: 20px;
+}
+
+#search-bar {
+    width: 80%;
+    border: 3px solid hotpink;
+    background-color: #fff0f5; 
+}
+
 .menuBtn {
     position: relative;
     cursor: pointer;
