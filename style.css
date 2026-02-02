@@ -73,6 +73,7 @@ body {
     text-align: center;
     width: 90%;
     max-width: 400px;
+    transition: transform 0.3s ease;
     
     /* ===== FASTER ANIMATION ===== */
     animation: gradient-shift 4s ease infinite;
