@@ -121,6 +121,7 @@ function renderBookmark(name, url, tags, isEditing = false) {
         li.className = 'editing';
         
         // Create edit form HTML structure
+
         li.innerHTML = `
             <div class="edit-form">
                 <input type="text" value="${name}" class="edit-name" placeholder="Bookmark Name">
