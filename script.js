@@ -114,7 +114,7 @@ function sortBookmarks(sortType) {
 // ============================================================================
 // BOOKMARK RENDERING - Creates HTML elements for bookmarks
 // ============================================================================
-function renderBookmark(name, url, tags, isEditing = false) {
+function renderBookmark(name, url, tags, isEditing = false, insertBefore = null) {
     // ========== EDITING MODE ==========
     // If isEditing is true, show edit form instead of bookmark
     if (isEditing) {
@@ -134,7 +134,12 @@ function renderBookmark(name, url, tags, isEditing = false) {
             </div>
         `;
         
-        bookmarkList.appendChild(li); // Add edit form to page
+        // Insert edit form at the saved position or append to end
+        if (insertBefore) {
+            bookmarkList.insertBefore(li, insertBefore);
+        } else {
+            bookmarkList.appendChild(li);
+        }
         
         // Save button handler
         li.querySelector('.save-edit').addEventListener('click', function() {
@@ -149,18 +154,22 @@ function renderBookmark(name, url, tags, isEditing = false) {
             // Update in localStorage
             updateBookmark(name, url, newName, newURL, newTags);
             
-            // Remove edit form and render updated bookmark
+            // Capture position before removing
+            const nextNode = li.nextSibling;
+            // Remove edit form and render updated bookmark at same position
             li.remove(); // Remove edit form
-            renderBookmark(newName, newURL, newTags); // Show updated bookmark
+            renderBookmark(newName, newURL, newTags, false, nextNode); // Show updated bookmark at same position
         });
         
         // Cancel button handler
         li.querySelector('.cancel-edit').addEventListener('click', function() {
+            // Capture position before removing
+            const nextNode = li.nextSibling;
             li.remove(); // Remove edit form
             
             // Only re-render original if we have values (not for cancelled new adds)
             if (name && url) {
-                renderBookmark(name, url, tags); // Show original bookmark again
+                renderBookmark(name, url, tags, false, nextNode); // Show original bookmark at same position
             }
         });
         
@@ -239,8 +248,9 @@ function renderBookmark(name, url, tags, isEditing = false) {
         menuBtn.classList.remove('active'); // Close menu
         
         // Replace bookmark with edit form
+        const nextSibling = li.nextSibling; // Save position before removing
         li.remove(); // Remove current bookmark display
-        renderBookmark(name, url, tags, true); // Re-render in edit mode
+        renderBookmark(name, url, tags, true, nextSibling); // Re-render in edit mode at same position
     });
 
     // ========== ASSEMBLE BOOKMARK ==========
@@ -253,8 +263,12 @@ function renderBookmark(name, url, tags, isEditing = false) {
     menuBtn.appendChild(menuContent);
     li.appendChild(menuBtn);
     
-    // Add completed bookmark to the page
-    bookmarkList.appendChild(li);
+    // Add completed bookmark to the page at correct position
+    if (insertBefore) {
+        bookmarkList.insertBefore(li, insertBefore);
+    } else {
+        bookmarkList.appendChild(li);
+    }
 }
 
 // ============================================================================
@@ -347,15 +361,22 @@ function saveBookmarkOrder() {
     const items = [...bookmarkList.children];
     const bookmarks = getBookmarksFromStorage(); // Get data from localStorage
 
-    // Create new array in current DOM order
+    // Create new array in current DOM order, preserving dateAdded
     const orderedBookmarks = items.map(item => {
         const link = item.querySelector('a'); // Get link element
         const tagSpan = item.querySelector('.tag-badge'); // Get tag element
+        const name = link.textContent;
+        const url = link.href;
+        const tags = tagSpan ? tagSpan.textContent : '';
+        
+        // Find original bookmark to preserve dateAdded
+        const original = bookmarks.find(b => b.name === name && b.url === url);
 
         return {
-            name: link.textContent, // Bookmark name
-            url: link.href, // Bookmark URL
-            tags: tagSpan ? tagSpan.textContent : '' // Tags or empty string
+            name: name, // Bookmark name
+            url: url, // Bookmark URL
+            tags: tags, // Tags or empty string
+            dateAdded: original ? original.dateAdded : Date.now() // Preserve original date or use current
         };
     });
 
