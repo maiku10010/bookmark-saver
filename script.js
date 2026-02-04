@@ -86,11 +86,11 @@ function sortBookmarks(sortType) {
             break;
             
         case 'date-newest': // Newest first (default - already in this order)
-            // Note: Currently uses array order since we don't store timestamps
+            bookmarks.sort((a, b) => b.dateAdded - a.dateAdded);
             break;
             
         case 'date-oldest': // Oldest first
-            bookmarks.reverse(); // Reverse the array
+            bookmarks.sort((a, b) => a.dateAdded - b.dateAdded);
             break;
             
         case 'tags': // Sort by tags alphabetically
@@ -108,6 +108,7 @@ function sortBookmarks(sortType) {
     // Clear the display and re-render with sorted order
     bookmarkList.innerHTML = ''; // Remove all bookmarks from display
     bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags)); // Re-add in sorted order
+    currentSort = sortType; // Update current sort method
 }
 
 // ============================================================================
@@ -369,26 +370,37 @@ function saveBookmarkOrder() {
 // UPDATE - Modify existing bookmark
 function updateBookmark(oldName, oldURL, newName, newURL, newTags) {
     let bookmarks = getBookmarksFromStorage();
-    // Find index of bookmark to update
-    const index = bookmarks.findIndex(b => b.name === oldName && b.url === oldURL);
+    const index = bookmarks.findIndex(b => b.name === oldName && b.url === oldURL);  // // Find index of bookmark to update
     
     if (index !== -1) { // If found
-        bookmarks[index] = { name: newName, url: newURL, tags: newTags }; // Update
+        bookmarks[index] = { // Update
+            name: newName, 
+            url: newURL, 
+            tags: newTags,
+            dateAdded: bookmarks[index].dateAdded // Keep original date
+        };
         localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); // Save
     }
 }
 
 // CREATE - Save new bookmark
 function saveBookmark(name, url, tags) {
-    const bookmarks = getBookmarksFromStorage(); // Get existing bookmarks
-    bookmarks.push({ name, url, tags }); // Add new bookmark
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); // Save
+    const bookmarks = getBookmarksFromStorage(); //Get array of bookmarks
+    bookmarks.push({ 
+        name, 
+        url, 
+        tags, 
+        dateAdded: Date.now() // Add bookmark with timestamp
+    });
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); //Save bookmarks to local storage
 }
 
 // READ - Load all bookmarks on page load
 function loadBookmarks() {
-    const bookmarks = getBookmarksFromStorage(); // Get from localStorage
-    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags)); // Render each
+    const bookmarks = getBookmarksFromStorage();
+    // Sort by newest first when loading
+    bookmarks.sort((a, b) => b.dateAdded - a.dateAdded);
+    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags));
 }
 
 // READ - Helper to get bookmarks from localStorage
