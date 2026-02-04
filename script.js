@@ -31,9 +31,9 @@ addBookmarkBtn.addEventListener('click', function() {
     if (!name || !url) return alert('Fill in name and URL');     // Require name and URL
     if (!url.startsWith('http')) return alert('Valid URL required'); // URL must start with http/https
 
-    // Add to page and save to storage
-    renderBookmark(name, url, tags);  // Display on page
-    saveBookmark(name, url, tags);    // Save to localStorage
+    // Save to storage and then render the created bookmark (ensures ID is available)
+    const created = saveBookmark(name, url, tags); // Save to localStorage and get created object
+    renderBookmark(created.name, created.url, created.tags, false, null, created.id);  // Display on page with ID
 
     // Clear input fields after adding
     bookmarkName.value = '';
@@ -106,34 +106,68 @@ function sortBookmarks(sortType) {
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
     
     // Clear the display and re-render with sorted order
-    bookmarkList.innerHTML = ''; // Remove all bookmarks from display
-    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags)); // Re-add in sorted order
+    while (bookmarkList.firstChild) {
+        bookmarkList.removeChild(bookmarkList.firstChild);
+    }
+    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags, false, null, b.id)); // Re-add in sorted order
     currentSort = sortType; // Update current sort method
 }
 
 // ============================================================================
 // BOOKMARK RENDERING - Creates HTML elements for bookmarks
 // ============================================================================
-function renderBookmark(name, url, tags, isEditing = false, insertBefore = null) {
+function renderBookmark(name, url, tags, isEditing = false, insertBefore = null, id = null) {
     // ========== EDITING MODE ==========
     // If isEditing is true, show edit form instead of bookmark
     if (isEditing) {
         const li = document.createElement('li');
         li.className = 'editing';
+        if (id) li.setAttribute('data-id', id);
         
         // Create edit form HTML structure
 
-        li.innerHTML = `
-            <div class="edit-form">
-                <input type="text" value="${name}" class="edit-name" placeholder="Bookmark Name">
-                <input type="text" value="${url}" class="edit-url" placeholder="URL">
-                <input type="text" value="${tags}" class="edit-tags" placeholder="Tags (comma separated)">
-                <div class="edit-buttons">
-                    <button class="save-edit">Save</button>
-                    <button class="cancel-edit">Cancel</button>
-                </div>
-            </div>
-        `;
+        // Build edit form using DOM methods (avoid raw HTML strings)
+        const form = document.createElement('div');
+        form.className = 'edit-form';
+
+        const inputName = document.createElement('input');
+        inputName.type = 'text';
+        inputName.value = name || '';
+        inputName.className = 'edit-name';
+        inputName.placeholder = 'Bookmark Name';
+
+        const inputURL = document.createElement('input');
+        inputURL.type = 'text';
+        inputURL.value = url || '';
+        inputURL.className = 'edit-url';
+        inputURL.placeholder = 'URL';
+
+        const inputTags = document.createElement('input');
+        inputTags.type = 'text';
+        inputTags.value = tags || '';
+        inputTags.className = 'edit-tags';
+        inputTags.placeholder = 'Tags (comma separated)';
+
+        const btnWrap = document.createElement('div');
+        btnWrap.className = 'edit-buttons';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'save-edit';
+        saveBtn.textContent = 'Save';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'cancel-edit';
+        cancelBtn.textContent = 'Cancel';
+
+        btnWrap.appendChild(saveBtn);
+        btnWrap.appendChild(cancelBtn);
+
+        form.appendChild(inputName);
+        form.appendChild(inputURL);
+        form.appendChild(inputTags);
+        form.appendChild(btnWrap);
+
+        li.appendChild(form);
         
         // Insert edit form at the saved position or append to end
         if (insertBefore) {
@@ -152,14 +186,14 @@ function renderBookmark(name, url, tags, isEditing = false, insertBefore = null)
             if (!newName || !newURL) return alert('Fill in name and URL');
             if (!newURL.startsWith('http')) return alert('Valid URL required');
             
-            // Update in localStorage
-            updateBookmark(name, url, newName, newURL, newTags);
+            // Update in localStorage (use id if available)
+            updateBookmark(id, newName, newURL, newTags);
             
             // Capture position before removing
             const nextNode = li.nextSibling;
             // Remove edit form and render updated bookmark at same position
             li.remove(); // Remove edit form
-            renderBookmark(newName, newURL, newTags, false, nextNode); // Show updated bookmark at same position
+            renderBookmark(newName, newURL, newTags, false, nextNode, id); // Show updated bookmark at same position
         });
         
         // Cancel button handler
@@ -170,7 +204,7 @@ function renderBookmark(name, url, tags, isEditing = false, insertBefore = null)
             
             // Only re-render original if we have values (not for cancelled new adds)
             if (name && url) {
-                renderBookmark(name, url, tags, false, nextNode); // Show original bookmark at same position
+                renderBookmark(name, url, tags, false, nextNode, id); // Show original bookmark at same position
             }
         });
         
@@ -181,7 +215,7 @@ function renderBookmark(name, url, tags, isEditing = false, insertBefore = null)
     // Create list item container for the bookmark
     const li = document.createElement('li');
     li.draggable = true; // Enable drag and drop
-    li.setAttribute('data-id', Date.now()); // Give unique ID
+    li.setAttribute('data-id', id || Date.now()); // Give unique ID (preserve provided id)
     
     // Create clickable link
     const a = document.createElement('a');
@@ -240,7 +274,8 @@ function renderBookmark(name, url, tags, isEditing = false, insertBefore = null)
     deleteBtn.addEventListener('click', function(e) {
         e.stopPropagation(); // Prevent menu from closing immediately
         li.remove(); // Remove from DOM
-        deleteBookmark(name, url); // Remove from localStorage
+        const bid = li.getAttribute('data-id');
+        deleteBookmark(bid); // Remove from localStorage
     });
 
     // Edit button functionality
@@ -251,7 +286,7 @@ function renderBookmark(name, url, tags, isEditing = false, insertBefore = null)
         // Replace bookmark with edit form
         const nextSibling = li.nextSibling; // Save position before removing
         li.remove(); // Remove current bookmark display
-        renderBookmark(name, url, tags, true, nextSibling); // Re-render in edit mode at same position
+        renderBookmark(name, url, tags, true, nextSibling, id); // Re-render in edit mode at same position
     });
 
     // ========== ASSEMBLE BOOKMARK ==========
@@ -369,11 +404,13 @@ function saveBookmarkOrder() {
         const name = link.textContent;
         const url = link.href;
         const tags = tagSpan ? tagSpan.textContent : '';
+        const bid = item.getAttribute('data-id');
         
-        // Find original bookmark to preserve dateAdded
-        const original = bookmarks.find(b => b.name === name && b.url === url);
+        // Find original bookmark to preserve dateAdded and id
+        const original = bookmarks.find(b => String(b.id) === String(bid));
 
         return {
+            id: bid,
             name: name, // Bookmark name
             url: url, // Bookmark URL
             tags: tags, // Tags or empty string
@@ -390,12 +427,13 @@ function saveBookmarkOrder() {
 // ============================================================================
 
 // UPDATE - Modify existing bookmark
-function updateBookmark(oldName, oldURL, newName, newURL, newTags) {
+function updateBookmark(id, newName, newURL, newTags) {
     let bookmarks = getBookmarksFromStorage();
-    const index = bookmarks.findIndex(b => b.name === oldName && b.url === oldURL);  // // Find index of bookmark to update
+    const index = bookmarks.findIndex(b => String(b.id) === String(id));
     
     if (index !== -1) { // If found
-        bookmarks[index] = { // Update
+        bookmarks[index] = { // Update (preserve id and date)
+            id: bookmarks[index].id,
             name: newName, 
             url: newURL, 
             tags: newTags,
@@ -408,13 +446,17 @@ function updateBookmark(oldName, oldURL, newName, newURL, newTags) {
 // CREATE - Save new bookmark
 function saveBookmark(name, url, tags) {
     const bookmarks = getBookmarksFromStorage(); //Get array of bookmarks
-    bookmarks.push({ 
+    const id = Date.now().toString();
+    const created = { 
+        id,
         name, 
         url, 
         tags, 
         dateAdded: Date.now() // Add bookmark with timestamp
-    });
+    };
+    bookmarks.push(created);
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); //Save bookmarks to local storage
+    return created;
 }
 
 // READ - Load all bookmarks on page load
@@ -422,7 +464,7 @@ function loadBookmarks() {
     const bookmarks = getBookmarksFromStorage();
     // Sort by newest first when loading
     bookmarks.sort((a, b) => b.dateAdded - a.dateAdded);
-    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags));
+    bookmarks.forEach(b => renderBookmark(b.name, b.url, b.tags, false, null, b.id));
 }
 
 // READ - Helper to get bookmarks from localStorage
@@ -432,10 +474,10 @@ function getBookmarksFromStorage() {
 }
 
 // DELETE - Remove bookmark
-function deleteBookmark(name, url) {
+function deleteBookmark(id) {
     let bookmarks = getBookmarksFromStorage();
-    // Filter out the bookmark to delete
-    bookmarks = bookmarks.filter(b => b.name !== name || b.url !== url);
+    // Filter out the bookmark to delete by id
+    bookmarks = bookmarks.filter(b => String(b.id) !== String(id));
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); // Save updated list
 }
 

@@ -154,7 +154,7 @@ button:hover{
 /* HEADER TITLE */
 #header-title {
     color: #fff;
-    text-weight: bold;
+    font-weight: bold;
     text-shadow: 
         0 0 5px hotpink,
         0 0 10px hotpink,
